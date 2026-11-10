@@ -20,6 +20,7 @@
 - F / Rechtsklick / WURF: Messer werfen
 - Umschalt / DASH: Ausweichen. Während eines Slides bricht Umschalt den Slide ab und verlängert ihn in den Dash.
 - Q / SLIDE: Aus dem Sprint über den Boden rutschen. C bleibt Stechen. Strg ist nicht belegt.
+- E / WEICHE: Gleiswechsel im Ansage-Fenster.
 - Leertaste / SPRUNG: Springen (früh loslassen = niedriger)
 - V: First-Person
 - N: Stimme der Bahnhofsdurchsage an oder aus. Das Textbanner bleibt. Standard ist an, wenn eine de-DE-Stimme da ist, sonst aus. Die Wahl wird gespeichert.

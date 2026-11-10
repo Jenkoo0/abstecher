@@ -7,11 +7,13 @@ describe("Tasten", () => {
     expect(FEEL_BINDINGS.dash).toBe("Shift");
     expect(FEEL_BINDINGS.jump).toBe("Space");
     expect(FEEL_BINDINGS.voiceToggle).toBe("KeyN");
+    expect(FEEL_BINDINGS.trackSwitch).toBe("KeyE");
     const taken = Object.values(TAKEN_BINDINGS).flat();
     expect(taken).toContain("KeyC");
     expect(taken).toContain("KeyW");
     expect(taken).not.toContain(FEEL_BINDINGS.slide);
     expect(taken).not.toContain(FEEL_BINDINGS.voiceToggle);
+    expect(taken).not.toContain(FEEL_BINDINGS.trackSwitch);
     expect(Object.values(FEEL_BINDINGS)).not.toContain("Control");
   });
 });

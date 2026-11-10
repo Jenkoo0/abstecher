@@ -10,6 +10,8 @@ export const FEEL_BINDINGS = {
   dash: "Shift",
   jump: "Space",
   voiceToggle: "KeyN",
+  /** Gleiswechsel. E liegt neben WASD und ist kein Browser-Kurzbefehl. */
+  trackSwitch: "KeyE",
 } as const;
 
 export const TAKEN_BINDINGS = {
