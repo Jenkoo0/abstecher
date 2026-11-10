@@ -4,7 +4,7 @@
  * Andocken in view3d: `pitch` und `roll` als Rotation der Figur,
  * `offsetY` als lokaler Versatz, `heightScale` zusätzlich zur Hitbox.
  * Die Hitbox-Höhe kommt aus `slideDash.heightScale`, nicht von hier.
- * Reduced motion blendet nicht ein, sondern stellt eine kleine, stille Pose.
+ * Reduced motion zeigt sofort die neutrale Ruhepose, ohne Überblendung.
  */
 
 import type { SlideMode } from "../feel/slideDash";
@@ -27,12 +27,7 @@ export function locomotionPose(input: {
 }): LocomotionPose {
   if (input.mode === "free") return STAND;
 
-  if (input.reducedMotion) {
-    if (input.mode === "slide") {
-      return { pitch: 0.12, roll: 0, heightScale: 0.72, offsetY: -0.15, stretchZ: 1 };
-    }
-    return STAND;
-  }
+  if (input.reducedMotion) return STAND;
 
   const blendMs = input.mode === "slide" ? 140 : 100;
   const t = easeOutCubic(clamp01(input.modeMs / blendMs));

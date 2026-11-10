@@ -40,37 +40,37 @@ Minimal repariert, damit `tsc && vite build` läuft:
 
 **Status:** Zeitskala fertig. Kein Kamerarig in der Szene. Der Shake ist ein Versatz, den nur die Kamera lesen darf.
 
-**Gebaut:** Treffer 50 ms, Wurf 74 ms, Kill 90 ms, alle im Fenster 40–90 ms. `timeScale` ist währenddessen 0, `simDtMs` auch. Ein kürzerer Treffer schneidet einen längeren nicht ab und Zeiten werden nicht addiert. Der Shake liegt in Schlagrichtung, ist bei Kill und Wurf stärker und klingt nach etwa 160 ms aus. Er wird nicht in die Sim-Zeit gemischt.
+**Gebaut:** Treffer 50 ms, Wurf 74 ms, Kill 90 ms, hartes Einfrieren (`timeScale` 0). Ein kürzerer Treffer schneidet einen längeren nicht ab und Zeiten werden nicht addiert. Der Shake liegt in Schlagrichtung, in Metern: 0,05 / 0,10 / 0,15. Er klingt in 100 ms linear ab und geht nicht in die Sim-Zeit.
 
 **Dateien:** `src/game/feel/hitstop.ts`, `src/game/feel/stepFeel.ts`.
 
 **Einbau:** Einmal pro Frame `stepFeel` (oder `triggerHitstop` + `tickHitstop`) mit der echten Framezeit. Physik, KI, Cooldowns, Sprung und Slide bekommen nur `simDtMs`. `shake` geht an `stepCamera`, nicht an den Körper. So bleiben die Systeme beieinander.
 
-**Grenzen:** Hartes Einfrieren, keine Zeitlupe mit Skala 0,2. Der Shake ist einheitslos (etwa 0,12 bis 0,28). view3d muss ihn in Kamerameter übersetzen, sobald die echte Skala feststeht.
+**Grenzen:** Keine Zeitlupe. Der Shake ist schon in Metern und darf nur auf die Kamera.
 
 ## 3. Slide und Dash
 
 **Status:** Zustandsmaschine fertig. Keine Figur, die sie abspielt.
 
-**Gebaut:** Slide nur am Boden, nur im Sprint und nur ab `MIN_SPRINT_SPEED`. Taste ist Strg (`Control`), nicht C. C bleibt Stechen. Dash bleibt Umschalt und geht auch aus der Luft. Slide und Dash gleichzeitig starten den Slide und brechen ihn nach 80 ms in den Dash ab, auch wenn der Dash nur gepuffert war. Das verlängert die Bewegung (Dash ist schneller) und macht im Dash kurz unverwundbar. Getrennte Cooldowns, kein Stapeln im selben Zustand.
+**Gebaut:** Slide nur am Boden, nur im Sprint und nur ab 6 m/s. Taste ist Q (`KeyQ`). C bleibt Stechen, Strg ist nicht belegt. Dash bleibt Umschalt (14 m/s, 180 ms) und geht auch aus der Luft. Slide (9,5 m/s) und Dash gleichzeitig starten den Slide und brechen ihn nach 80 ms in den Dash ab. Unverwundbar sind nur die ersten 100 ms des Dash. Getrennte Cooldowns.
 
 **Dateien:** `src/game/feel/slideDash.ts`, `src/game/feel/controls.ts`.
 
-**Einbau:** Kanten von Strg und Umschalt als `slidePressed` und `dashPressed`, zusammen mit Boden, Sprint-Flag und Geschwindigkeit. `dtMs` ist `simDtMs`. `speed` aus dem Modul ersetzt die Laufgeschwindigkeit, solange der Modus nicht `free` ist. `heightScale` ist der Hinweis fürs Ducken unter Bänke. Die Hitbox muss die Sim selbst verkleinern. Die sichtbare Pose kommt aus `locomotionPose`.
+**Einbau:** Kanten von Q und Umschalt als `slidePressed` und `dashPressed`, zusammen mit Boden, Sprint-Flag und Geschwindigkeit in m/s. `dtMs` ist `simDtMs`. `speed` aus dem Modul ersetzt die Laufgeschwindigkeit, solange der Modus nicht `free` ist. `heightScale` ist der Hinweis fürs Ducken unter Bänke und bleibt auch bei Reduced Motion eine Hitbox-Frage. Die sichtbare Pose kommt aus `locomotionPose`.
 
-**Grenzen:** Geschwindigkeiten (Slide 460, Dash 720, Sprint-Schwelle 220) sind auf das 1600×900-Brett geraten. Unverwundbarkeit ist nur ein Flag. Kein Messerstich aus dem Slide, kein Bewegungsunschärfe-Effekt.
+**Grenzen:** Kein Messerstich aus dem Slide, kein Bewegungsunschärfe-Effekt. Die Hitbox muss die Sim selbst verkleinern.
 
 ## 4. Sprungphysik
 
 **Status:** Schrittfunktion fertig. Kein Charakter-Controller.
 
-**Gebaut:** Coyote Time 100 ms inklusive, Jump-Buffer 120 ms inklusive, frühes Loslassen kürzt die Aufwärtsgeschwindigkeit einmal (`JUMP_CUT` 0,48), Fallbeschleunigung ist stärker als die im Aufstieg (1500 gegen 3400). Ein zweiter Sprung über Coyote nach einem echten Absprung geht nicht. Solange `vy > 0`, klebt ein noch gemeldeter Boden den Sprung nicht ab.
+**Gebaut:** Coyote Time 100 ms inklusive, Jump-Buffer 120 ms inklusive, frühes Loslassen kürzt die Aufwärtsgeschwindigkeit einmal (`JUMP_CUT` 0,48). Einheiten sind Meter: Absprung 10,5 m/s, Aufstieg 23 m/s² (Scheitel etwa 2,4 m), Fall 52 m/s². Ein zweiter Sprung über Coyote nach einem echten Absprung geht nicht. Solange `vy > 0`, klebt ein noch gemeldeter Boden den Sprung nicht ab.
 
 **Dateien:** `src/game/feel/jump.ts`.
 
-**Einbau:** `stepJump` mit `simDtMs`. `grounded` aus der Kollision. Wenn `jumped` wahr ist, den Körper in diesem Frame nicht wieder auf den Boden snappen. `vy` ist Welt-Einheiten pro Sekunde.
+**Einbau:** `stepJump` mit `simDtMs`. `grounded` aus der Kollision. Wenn `jumped` wahr ist, den Körper in diesem Frame nicht wieder auf den Boden snappen. `vy` ist Meter pro Sekunde.
 
-**Grenzen:** Die Sprunghöhe passt erst, wenn die Sim dieselbe Einheit nutzt. Kein Wandlauf, keine variable Schwerkraft über Pickups.
+**Grenzen:** Kein Wandlauf, keine variable Schwerkraft über Pickups. Die Sim muss dieselbe Meter-Skala verwenden.
 
 ## 5. Animationen
 
@@ -80,7 +80,7 @@ Minimal repariert, damit `tsc && vite build` läuft:
 
 - Easing (`easeOutCubic`, `easeInQuad`, `easeOutBack`) und Tweens für Zahlen und Vektoren. Reduced motion springt ans Ziel.
 - Squash and Stretch: Absprung streckt Y und zieht X/Z ein, Landung staucht Y und hält das Volumen. Klingt aus. Reduced motion bleibt bei Skala 1.
-- Slide-Pose (nickt rein, geht runter) und Dash-Pose (kürzer geneigt, in Laufrichtung gestreckt). Reduced motion stellt die Slide-Pose sofort und ohne Streckung hin.
+- Slide-Pose (nickt rein, geht runter) und Dash-Pose (kürzer geneigt, in Laufrichtung gestreckt). Reduced motion zeigt sofort die neutrale Ruhepose, Skala 1, ohne Überblendung.
 - Kamera folgt nur mit `simDtMs`, steht also im Hitstop. Shake liegt nur auf der ausgegebenen Position. Reduced motion schüttelt nicht und setzt außerhalb des Hitstops hart aufs Ziel.
 - Landungsstaub als Punkte mit Leben und Geschwindigkeit. Reduced motion spawnt keinen.
 - Durchsage blendet in 280 ms ein und in den letzten 360 ms aus, mit einem kleinen Versatz nach unten. Reduced motion ist sofort deckend und ohne Rutschen.
@@ -103,24 +103,28 @@ Dieselben Sätze stehen in `ANIM_DOCKS`. `prefersReducedMotion` liest ein überg
 
 ## Testergebnis
 
-`npm test` (`vitest run`): 17 Dateien, 47 Tests, alle grün.
+`npm test` (`vitest run`): 19 Dateien, 54 Tests, alle grün.
 
 `npm run build` (`tsc && vite build`): grün, nachdem die oben genannten Build-Dateien ergänzt und `src/routes` vom Typecheck ausgenommen wurden. Der vorherige Stand ließ sich nicht bauen.
 
 ## Bekannte Grenzen, gesammelt
 
 - Ohne sim/view3d/draw/Abstecher ist nichts davon im Spiel spürbar. Die Module sind der Einbaupunkt, nicht der Einbau.
-- Welt-Einheiten sind Annahmen.
+- Welt-Einheit ist der Meter. Die fehlende Sim muss dieselbe Skala benutzen.
 - `src/routes/index.tsx` kompiliert erst, wenn `src/components/Abstecher.tsx` wirklich existiert. Bis dahin bleibt der Ordner in `tsconfig.json` ausgeschlossen.
 - Die Produktions-Seite aus `index.html` zeigt kein Spiel. Sie ist der Vite-Einstieg.
 
-## Offene Fragen an Julian
+## Entscheidungen (10.11.2026)
 
-1. Soll die Durchsage-Stimme standardmäßig an sein? Hier ist sie nur ein Schalter (`N`), Default muss die Sim setzen. Vorschlag: aus, bis die Zeilen im echten UI sitzen. `save.mute` ist heute nur der Tongenerator, nicht die Stimme. Sollen beide gemeinsam stumm sein?
-2. Ist Strg als Slide-Taste in Ordnung, oder soll es eine andere freie Taste sein (zum Beispiel Q)? C ist laut README Stechen und bleibt das.
-3. Hitstop ist ein hartes Einfrieren (`timeScale` 0) für 50/74/90 ms. Die Notiz sagte „Einfrieren/Zeitlupe“. Reicht das Einfrieren?
-4. Dash setzt ein Flag `invulnerable`. Soll der Dash wirklich kurz unverwundbar sein, oder nur schnell?
-5. Sprung-, Slide- und Dash-Zahlen hängen an Welt-Einheiten pro Sekunde. Welche Einheit hat die fehlende Sim (Meter oder das 1600×900-Brett)?
-6. Die Bahnhofs-IDs in den Texten sind `kiel`, `hamburg`, `koeln`, `frankfurt`, `muenchen`, `berlin`. Passen die zu der späteren `stations.ts`?
-7. Reduced motion dämpft Pose, Shake, Staub und Banner. Die Slide-Hitbox soll trotzdem ducken. Ist die kleine Restpose (leicht geneigt, etwas niedriger) gewollt oder soll bei reduced motion gar keine Posenänderung sichtbar sein?
-8. Kamera-Shake ist absichtlich klein und einheitslos. Welchen Ausschlag in Metern soll view3d daraus machen?
+Julian, 01:59 Europe/Berlin, über den Koordinator. Wo eine Vorgabe technisch hakt, steht die Begründung dabei.
+
+1. **Stimme:** Standard an, wenn eine Stimme mit dem Tag `de-DE` da ist, sonst aus. Nur `de-AT` zählt nicht als dieser Default, wird aber beim Sprechen einer deutschen Stimme vor Englisch bevorzugt. Der Untertitel läuft immer. N schaltet um. Gespeichert wird erst die Taste, im Feld `save.voice`. `null` heißt noch keine Wahl, damit ein später geladenes `voiceschanged` den Default nicht festnagelt. `mute` bleibt der Effekt-Ton und ist unabhängig, sonst schaltet eine Ansage die Stich-Sounds mit.
+2. **Slide-Taste:** Q (`KeyQ`). Strg ist nicht belegt. Strg+W würde im Browser den Tab schließen, und W ist Laufen. Q kollidiert nicht mit WASD, C, F, V, N, Umschalt, Leertaste oder den Maustasten.
+3. **Hitstop:** Hartes Einfrieren, `timeScale` 0. Zeiten bleiben 50, 74 und 90 ms.
+4. **Dash:** Unverwundbar nur die ersten 100 ms von 180 ms. Danach ist der Dash noch schnell, aber treffbar.
+5. **Welt-Einheiten:** 1 Einheit = 1 Meter. Sprung 10,5 m/s, Aufstieg 23 m/s², Fall 52 m/s², Scheitel etwa 2,4 m. Sprint-Schwelle 6 m/s, Slide 9,5 m/s, Dash 14 m/s. Kamera sitzt 1,6 m über und 6 m hinter der Figur. Staub rechnet in m/s.
+6. **Bahnhofs-IDs:** `kiel`, `hamburg`, `koeln`, `frankfurt`, `muenchen`, `berlin` in `STATION_IDS`. Neue Maps werden als weiterer Kleinbuchstaben-Slug ohne Umlaut ergänzt. Unbekannte IDs, zum Beispiel `bremen`, nutzen die allgemeine Zeile und werfen nicht.
+7. **Reduced Motion:** Sofort die neutrale Ruhepose (Neigung 0, Höhenfaktor 1, keine Streckung), Squash bleibt bei Skala 1, Kamera-Shake ist 0. Die Slide-Hitbox aus `heightScale` duckt weiter. Das ist Kollision, keine Animation, sonst verliert der Slide unter Bänken seine Funktion.
+8. **Shake:** 0,05 m bei einem Treffer, 0,10 m beim Wurf, 0,15 m beim Kill, lineares Abklingen in 100 ms. Der Wert ist schon Meter und wird nur auf die Kamera addiert.
+
+Coyote Time bleibt 100 ms, der Jump-Buffer 120 ms, der Slide-Abbruch in den Dash 80 ms. Das waren gesetzte Zeiten und keine offenen Fragen.

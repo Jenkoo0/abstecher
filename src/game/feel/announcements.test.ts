@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  STATION_IDS,
   createBannerState,
   listAllAnnouncementTexts,
   pickAnnouncement,
@@ -45,6 +46,14 @@ describe("Bahnhofsdurchsagen", () => {
     expect(over.priority).toBeGreaterThan(boss.priority);
     expect(boss.priority).toBeGreaterThan(train.priority);
     expect(train.priority).toBeGreaterThan(round.priority);
+  });
+
+  it("führt die sechs Startbahnhöfe als erweiterbare Slugs ohne Umlaute", () => {
+    expect([...STATION_IDS]).toEqual(["kiel", "hamburg", "koeln", "frankfurt", "muenchen", "berlin"]);
+    for (const id of STATION_IDS) {
+      expect(id).toMatch(/^[a-z]+$/);
+    }
+    expect(pickAnnouncement({ event: "round_start", stationId: "bremen", round: 1 }, () => 0).text.length).toBeGreaterThan(20);
   });
 
   it("nimmt lokale Zeilen für die sechs Startbahnhöfe und sonst die allgemeine Fassung", () => {

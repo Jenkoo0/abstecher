@@ -1,8 +1,12 @@
 /**
- * Optionale Sprachausgabe. Die Auswahl der Zeile bleibt in `announcements`.
- * Einbau: `speechCue` aus `stepFeel` an `speakAnnouncement` geben, wenn die
- * Einstellung an ist. Ohne `speechSynthesis` bleibt es beim Textbanner.
+ * Sprachausgabe der Durchsage. Die Zeile bleibt in `announcements`,
+ * die Wahl in `voiceEnabled` und im Save-Feld `voice`.
+ * Einbau: `speechCue` nur sprechen, wenn `voiceEnabled` wahr ist.
+ * Bevorzugt wird eine de-DE-Stimme, danach jede andere deutsche.
+ * Ohne `speechSynthesis` bleibt der Untertitel.
  */
+
+import { pickGermanVoice } from "./voice";
 
 export type SpeechSink = {
   cancel: () => void;
@@ -26,6 +30,8 @@ export function createWebSpeechSink(): SpeechSink | null {
     },
     speak(text: string) {
       const utterance = new SpeechSynthesisUtterance(text);
+      const voice = pickGermanVoice(synth.getVoices());
+      if (voice) utterance.voice = voice;
       utterance.lang = "de-DE";
       utterance.rate = 0.92;
       utterance.pitch = 0.82;

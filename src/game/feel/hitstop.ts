@@ -3,26 +3,29 @@
  *
  * Einbau: `tickHitstop` mit der echten Framezeit aufrufen. Physik, KI,
  * Cooldowns und Bewegung bekommen nur `simDtMs`. Der Kamera-Offset `shake`
- * darf nur auf die Kamera, nie auf den Körper. Während `timeScale === 0`
- * rückt keine Spiellogik vor, deshalb laufen die Systeme nicht auseinander.
+ * ist in Metern und darf nur auf die Kamera, nie auf den Körper. Während
+ * `timeScale === 0` rückt keine Spiellogik vor, die Systeme bleiben beieinander.
  * Ein neuer Treffer ersetzt den Stop, er addiert ihn nicht.
  */
 
 export type HitKind = "hit" | "kill" | "throw";
 
-const DURATION_MS: Record<HitKind, number> = {
+/** Hartes Einfrieren in Millisekunden. Keine Zeitlupe. */
+export const HITSTOP_MS: Record<HitKind, number> = {
   hit: 50,
   throw: 74,
   kill: 90,
 };
 
-const SHAKE_AMP: Record<HitKind, number> = {
-  hit: 0.12,
-  throw: 0.2,
-  kill: 0.28,
+/** Kameraversatz in Metern. Kill am oberen Rand von 0,15 m. */
+export const SHAKE_AMP_M: Record<HitKind, number> = {
+  hit: 0.05,
+  throw: 0.1,
+  kill: 0.15,
 };
 
-const SHAKE_MS = 160;
+/** Schnelles lineares Abklingen des Shake, in Millisekunden. */
+export const SHAKE_DECAY_MS = 100;
 
 export type HitstopState = {
   remainingMs: number;
@@ -48,7 +51,7 @@ export function createHitstopState(): HitstopState {
   return {
     remainingMs: 0,
     shakeMs: 0,
-    shakeDurationMs: SHAKE_MS,
+    shakeDurationMs: SHAKE_DECAY_MS,
     shakeAmp: 0,
     dirX: 1,
     dirY: 0,
@@ -69,8 +72,8 @@ export function triggerHitstop(
   kind: HitKind,
   dir?: { x: number; y: number },
 ): HitstopState {
-  const duration = DURATION_MS[kind];
-  const shakeAmp = SHAKE_AMP[kind];
+  const duration = HITSTOP_MS[kind];
+  const shakeAmp = SHAKE_AMP_M[kind];
   const aim = aimOf(dir);
 
   if (duration <= state.remainingMs) {
@@ -80,15 +83,15 @@ export function triggerHitstop(
       shakeAmp,
       dirX: aim.x,
       dirY: aim.y,
-      shakeMs: Math.max(state.shakeMs, SHAKE_MS),
-      shakeDurationMs: SHAKE_MS,
+      shakeMs: Math.max(state.shakeMs, SHAKE_DECAY_MS),
+      shakeDurationMs: SHAKE_DECAY_MS,
     };
   }
 
   return {
     remainingMs: duration,
-    shakeMs: SHAKE_MS,
-    shakeDurationMs: SHAKE_MS,
+    shakeMs: SHAKE_DECAY_MS,
+    shakeDurationMs: SHAKE_DECAY_MS,
     shakeAmp,
     dirX: aim.x,
     dirY: aim.y,

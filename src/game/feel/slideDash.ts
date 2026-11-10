@@ -1,12 +1,13 @@
 /**
  * Slide aus dem Sprint, verlängerbar in einen Dash.
  *
- * Einbau: Kante von Strg als `slidePressed`, Kante von Umschalt als
- * `dashPressed` (C ist Stechen und bleibt frei). `dtMs` ist simDt, damit
- * der Slide im Hitstop mit der übrigen Bewegung stehen bleibt.
- * `speed` ist die aktuelle Laufgeschwindigkeit in Welt-Einheiten pro Sekunde.
+ * Einbau: Kante von Q als `slidePressed`, Kante von Umschalt als
+ * `dashPressed` (C ist Stechen und bleibt frei, Strg ist nicht belegt).
+ * `dtMs` ist simDt, damit der Slide im Hitstop mit der übrigen Bewegung
+ * stehen bleibt. Geschwindigkeiten sind Meter pro Sekunde (1 Einheit = 1 m).
  * `heightScale` < 1 nur im Slide: damit kann die spätere Kollision unter
- * Bänke ducken. `invulnerable` gilt nur während des Dash.
+ * Bänke ducken. `invulnerable` gilt nur in den ersten `DASH_IFRAMES_MS`
+ * des Dash, nicht über die ganze Strecke.
  *
  * Gleichzeitig gedrücktes Slide und Dash startet den Slide und bricht ihn
  * ab, sobald `SLIDE_CANCEL_MIN_MS` um sind. Der Dash allein bleibt das
@@ -17,10 +18,15 @@ export const SLIDE_MS = 480;
 export const SLIDE_COOLDOWN_MS = 700;
 export const SLIDE_CANCEL_MIN_MS = 80;
 export const DASH_MS = 180;
+/** Unverwundbar nur am Anfang des Dash, nicht bis zum Ende (180 ms). */
+export const DASH_IFRAMES_MS = 100;
 export const DASH_COOLDOWN_MS = 650;
-export const MIN_SPRINT_SPEED = 220;
-export const SLIDE_SPEED = 460;
-export const DASH_SPEED = 720;
+/** Meter pro Sekunde. Darunter ist es Gehen, kein Sprint. */
+export const MIN_SPRINT_SPEED = 6;
+/** Meter pro Sekunde. */
+export const SLIDE_SPEED = 9.5;
+/** Meter pro Sekunde. Kurz und schneller als der Slide. */
+export const DASH_SPEED = 14;
 export const SLIDE_HEIGHT = 0.55;
 
 export type SlideMode = "free" | "slide" | "dash";
@@ -57,7 +63,7 @@ type Core = {
 function present(core: Core): SlideDashState {
   return {
     ...core,
-    invulnerable: core.mode === "dash",
+    invulnerable: core.mode === "dash" && core.modeMs <= DASH_IFRAMES_MS,
     speed: core.mode === "dash" ? DASH_SPEED : core.mode === "slide" ? SLIDE_SPEED : 0,
     heightScale: core.mode === "slide" ? SLIDE_HEIGHT : 1,
   };

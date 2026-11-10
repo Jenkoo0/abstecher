@@ -55,17 +55,28 @@ const DURATION_MS: Record<AnnouncementEvent, number> = {
 const INTERRUPT_AT = PRIORITY.boss_appear;
 const QUEUE_MAX = 3;
 
-const STATION_NAMES: Record<string, string> = {
+/**
+ * Slugs ohne Umlaute. Weitere Maps werden hier und in `POOLS.stations`
+ * ergänzt. Unbekannte IDs fallen auf die allgemeine Fassung zurück.
+ */
+export const STATION_IDS = ["kiel", "hamburg", "koeln", "frankfurt", "muenchen", "berlin"] as const;
+
+export type StationSlug = (typeof STATION_IDS)[number];
+
+const STATION_NAMES: Record<StationSlug, string> = {
   kiel: "Kiel Hauptbahnhof",
   hamburg: "Hamburg Hauptbahnhof",
   koeln: "Köln Hauptbahnhof",
   frankfurt: "Frankfurt (Main) Hauptbahnhof",
   muenchen: "München Hauptbahnhof",
   berlin: "Berlin Hauptbahnhof",
-  generic: "diesem Hauptbahnhof",
 };
 
-const KNOWN = new Set(Object.keys(STATION_NAMES));
+const GENERIC_STATION_NAME = "diesem Hauptbahnhof";
+
+function isStationSlug(id: string): id is StationSlug {
+  return (STATION_IDS as readonly string[]).includes(id);
+}
 
 type Pool = { generic: string[]; stations: Record<string, string[]> };
 
@@ -186,9 +197,9 @@ function fill(template: string, req: AnnouncementRequest, stationName: string) {
 
 function resolveStation(req: AnnouncementRequest) {
   const requested = req.stationId ?? "generic";
-  const known = KNOWN.has(requested);
-  const poolKey = known && requested !== "generic" ? requested : "generic";
-  const name = req.stationName ?? (known ? STATION_NAMES[requested] : "diesem Hauptbahnhof");
+  const known = isStationSlug(requested);
+  const poolKey = known ? requested : "generic";
+  const name = req.stationName ?? (known ? STATION_NAMES[requested] : GENERIC_STATION_NAME);
   return { id: known ? requested : "generic", poolKey, name };
 }
 
@@ -227,7 +238,8 @@ export function listAllAnnouncementTexts(): string[] {
     }
     for (const [stationId, templates] of Object.entries(pool.stations)) {
       for (const template of templates) {
-        texts.push(fill(template, { ...sample, event, stationId }, STATION_NAMES[stationId] ?? stationId));
+        const stationName = isStationSlug(stationId) ? STATION_NAMES[stationId] : stationId;
+        texts.push(fill(template, { ...sample, event, stationId }, stationName));
       }
     }
   }

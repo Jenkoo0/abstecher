@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createHitstopState, tickHitstop, triggerHitstop } from "./hitstop";
+import { HITSTOP_MS, SHAKE_AMP_M, SHAKE_DECAY_MS, createHitstopState, tickHitstop, triggerHitstop } from "./hitstop";
 
 function mag(shake: { x: number; y: number }) {
   return Math.hypot(shake.x, shake.y);
@@ -18,6 +18,13 @@ describe("Hitstop", () => {
     expect(thrown.remainingMs).toBeGreaterThan(hit.remainingMs);
     expect(kill.remainingMs).toBeGreaterThan(hit.remainingMs);
     expect(kill.remainingMs).toBeGreaterThanOrEqual(thrown.remainingMs);
+    expect(hit.remainingMs).toBe(HITSTOP_MS.hit);
+    expect(thrown.remainingMs).toBe(HITSTOP_MS.throw);
+    expect(kill.remainingMs).toBe(HITSTOP_MS.kill);
+    expect(HITSTOP_MS).toEqual({ hit: 50, throw: 74, kill: 90 });
+    expect(SHAKE_AMP_M).toEqual({ hit: 0.05, throw: 0.1, kill: 0.15 });
+    expect(hit.shakeAmp).toBeGreaterThanOrEqual(0.05);
+    expect(kill.shakeAmp).toBeLessThanOrEqual(0.15);
   });
 
   it("setzt während des Einfrierens eine gemeinsame Zeitskala von 0", () => {
@@ -92,5 +99,10 @@ describe("Hitstop", () => {
     const settled = tickHitstop(state, 500);
     expect(settled.timeScale).toBe(1);
     expect(mag(settled.shake)).toBe(0);
+
+    const fresh = triggerHitstop(createHitstopState(), "hit", { x: 1, y: 0 });
+    const faded = tickHitstop(fresh, SHAKE_DECAY_MS);
+    expect(mag(faded.shake)).toBe(0);
+    expect(faded.timeScale).toBe(0);
   });
 });

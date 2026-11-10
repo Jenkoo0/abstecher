@@ -11,12 +11,15 @@
 export const COYOTE_MS = 100;
 export const JUMP_BUFFER_MS = 120;
 
-/** Aufwärtsimpuls in Welt-Einheiten pro Sekunde. An die spätere Sim anpassen. */
-export const JUMP_SPEED = 640;
-/** Schwerkraft beim Steigen, Welt-Einheiten pro Sekunde². */
-export const GRAVITY_RISE = 1500;
-/** Stärkere Schwerkraft im Fall, damit die Kurve knackig nach unten zieht. */
-export const GRAVITY_FALL = 3400;
+/**
+ * Meter pro Sekunde. Mit `GRAVITY_RISE` liegt der gehaltene Scheitel bei
+ * etwa v² / (2g) ≈ 2,4 m.
+ */
+export const JUMP_SPEED = 10.5;
+/** Meter pro Sekunde², nur solange `vy > 0`. */
+export const GRAVITY_RISE = 23;
+/** Meter pro Sekunde² im Fall, deutlich stärker als der Aufstieg. */
+export const GRAVITY_FALL = 52;
 /** Faktor, wenn die Sprungtaste früh losgelassen wird. Wirkt nur einmal. */
 export const JUMP_CUT = 0.48;
 

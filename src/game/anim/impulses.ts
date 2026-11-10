@@ -2,7 +2,8 @@
  * Landungs- und Staubimpulse als Punkte mit Leben.
  *
  * Andocken in draw: pro Impuls ein kurzlebiges Sprite oder ein Punkt.
- * Opacity aus `lifeMs / maxLifeMs`. Nichts davon ist ein Three-Objekt.
+ * Opacity aus `lifeMs / maxLifeMs`. Geschwindigkeiten sind Meter pro Sekunde.
+ * Nichts davon ist ein Three-Objekt.
  * Reduced motion erzeugt keinen Staub.
  */
 
@@ -33,14 +34,14 @@ export function spawnLandingBurst(input: {
   const puffs: Impulse[] = [];
   for (let i = 0; i < count; i += 1) {
     const angle = rng() * Math.PI * 2;
-    const speed = (0.6 + rng()) * Math.max(0.2, input.intensity);
+    const speed = (1.4 + rng() * 1.8) * Math.max(0.4, input.intensity);
     const lifeMs = 320 + rng() * 180;
     puffs.push({
       x: input.x,
       y: input.y,
       z: input.z,
       vx: Math.cos(angle) * speed,
-      vy: 0.4 + rng() * 0.8,
+      vy: 1.5 + rng() * 1.2,
       vz: Math.sin(angle) * speed,
       lifeMs,
       maxLifeMs: lifeMs,
@@ -64,7 +65,7 @@ export function tickImpulses(particles: Impulse[], dtMs: number): Impulse[] {
       x: puff.x + puff.vx * seconds,
       y: puff.y + puff.vy * seconds,
       z: puff.z + puff.vz * seconds,
-      vy: puff.vy - 2.4 * seconds,
+      vy: puff.vy - 12 * seconds,
     });
   }
   return next;

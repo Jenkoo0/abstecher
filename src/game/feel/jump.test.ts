@@ -102,8 +102,8 @@ describe("Sprungphysik", () => {
       const before = state.vy;
       state = stepJump(state, air({ jumpHeld: true })).state;
       const drop = before - state.vy;
-      if (before > 40 && state.vy > 0) rising.push(drop);
-      if (before < -40) falling.push(drop);
+      if (before > 2 && state.vy > 0) rising.push(drop);
+      if (before < -2) falling.push(drop);
     }
     expect(rising.length).toBeGreaterThan(0);
     expect(falling.length).toBeGreaterThan(0);

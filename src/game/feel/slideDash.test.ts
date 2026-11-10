@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   DASH_COOLDOWN_MS,
+  DASH_IFRAMES_MS,
   DASH_MS,
   MIN_SPRINT_SPEED,
   SLIDE_CANCEL_MIN_MS,
@@ -103,6 +104,15 @@ describe("Slide und Dash", () => {
     expect(state.mode).toBe("slide");
     state = stepSlideDash(state, sprintInput({ dtMs: SLIDE_CANCEL_MIN_MS, dashPressed: true }));
     expect(state.mode).toBe("slide");
+  });
+
+  it("ist nur in den ersten 100 ms des Dash unverwundbar", () => {
+    let state = stepSlideDash(createSlideDashState(), { ...still, dashPressed: true, dtMs: 16 });
+    expect(state.invulnerable).toBe(true);
+    state = stepSlideDash(state, { ...still, dtMs: DASH_IFRAMES_MS });
+    expect(state.mode).toBe("dash");
+    expect(state.modeMs).toBeGreaterThan(DASH_IFRAMES_MS);
+    expect(state.invulnerable).toBe(false);
   });
 
   it("duckt nur im Slide", () => {

@@ -1,11 +1,12 @@
 /**
  * Tasten, die der spätere Input-Code auf die Feel-Module legen soll.
- * C bleibt Stechen, wie im README. Slide liegt auf Strg.
- * N schaltet nur die Sprachausgabe der Durchsagen, nicht die Textzeile.
+ * C bleibt Stechen. Slide liegt auf Q: Strg fällt weg, weil Strg+W im
+ * Browser den Tab schließt und W Laufen ist. Strg ist nicht zusätzlich belegt.
+ * N schaltet nur die Sprachausgabe. Der Untertitel bleibt immer sichtbar.
  */
 
 export const FEEL_BINDINGS = {
-  slide: "Control",
+  slide: "KeyQ",
   dash: "Shift",
   jump: "Space",
   voiceToggle: "KeyN",

@@ -54,6 +54,7 @@ export function stepPresentation(state: PresentationState, frame: PresentationFr
     reducedMotion: frame.reducedMotion,
   });
   const camera = stepCamera(state.camera, {
+    // Augenhöhe 1,6 m, Kamera 6 m hinter der Figur. Shake kommt schon in Metern.
     target: { x: frame.player.x, y: frame.player.y + 1.6, z: frame.player.z + 6 },
     lookAt: { x: frame.player.x, y: frame.player.y + 1.1, z: frame.player.z },
     realDtMs: frame.realDtMs,
@@ -68,7 +69,7 @@ export function stepPresentation(state: PresentationState, frame: PresentationFr
         x: frame.player.x,
         y: frame.player.y,
         z: frame.player.z,
-        intensity: frame.landingIntensity ?? Math.min(1, Math.abs(frame.player.vy) / 600),
+        intensity: frame.landingIntensity ?? Math.min(1, Math.abs(frame.player.vy) / 12),
         reducedMotion: frame.reducedMotion,
         rng: frame.rng,
       })

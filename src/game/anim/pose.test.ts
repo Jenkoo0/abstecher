@@ -20,13 +20,16 @@ describe("Slide- und Dash-Pose", () => {
     expect(dash.pitch).toBeLessThan(late.pitch);
   });
 
-  it("nimmt die ruhige Pose bei reduced motion sofort und ohne Schnörkel", () => {
+  it("zeigt bei reduced motion sofort die neutrale Ruhepose", () => {
     const early = locomotionPose({ mode: "slide", modeMs: 0, reducedMotion: true });
     const late = locomotionPose({ mode: "slide", modeMs: 400, reducedMotion: true });
-    const full = locomotionPose({ mode: "slide", modeMs: 400 });
-    expect(early.pitch).toBeCloseTo(late.pitch);
-    expect(late.pitch).toBeLessThan(full.pitch);
-    expect(late.stretchZ).toBe(1);
-    expect(late.heightScale).toBeLessThan(1);
+    const dash = locomotionPose({ mode: "dash", modeMs: 90, reducedMotion: true });
+    for (const pose of [early, late, dash]) {
+      expect(pose.pitch).toBe(0);
+      expect(pose.roll).toBe(0);
+      expect(pose.heightScale).toBe(1);
+      expect(pose.offsetY).toBe(0);
+      expect(pose.stretchZ).toBe(1);
+    }
   });
 });
