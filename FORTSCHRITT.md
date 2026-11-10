@@ -103,7 +103,7 @@ Dieselben Sätze stehen in `ANIM_DOCKS`. `prefersReducedMotion` liest ein überg
 
 ## Testergebnis
 
-`npm test` (`vitest run`): 19 Dateien, 54 Tests, alle grün.
+`npm test` (`vitest run`): 30 Dateien, 75 Tests, alle grün. Die früheren 54 Tests sind weiter dabei. Ein eigenes Lint-Skript gibt es im Repo nicht. `tsc` im Build ist die Typprüfung.
 
 `npm run build` (`tsc && vite build`): grün, nachdem die oben genannten Build-Dateien ergänzt und `src/routes` vom Typecheck ausgenommen wurden. Der vorherige Stand ließ sich nicht bauen.
 
@@ -128,3 +128,46 @@ Julian, 01:59 Europe/Berlin, über den Koordinator. Wo eine Vorgabe technisch ha
 8. **Shake:** 0,05 m bei einem Treffer, 0,10 m beim Wurf, 0,15 m beim Kill, lineares Abklingen in 100 ms. Der Wert ist schon Meter und wird nur auf die Kamera addiert.
 
 Coyote Time bleibt 100 ms, der Jump-Buffer 120 ms, der Slide-Abbruch in den Dash 80 ms. Das waren gesetzte Zeiten und keine offenen Fragen.
+
+## Neue Mechaniken
+
+Coyote Time und Jump-Buffer waren schon in `jump.ts`. Sie sind nicht noch einmal gebaut.
+
+**Status:** reine, getestete Bausteine. Keine Szene, kein Abstecher.
+
+| Baustein | Datei | Was er tut |
+| --- | --- | --- |
+| Gleiswechsel | `src/game/feel/switch.ts` | Ansage, dann 220-ms-Fenster auf Taste E. Spurabstand 3,2 m. Zu früh oder zu spät bleibt die Spur. Kamerahinweis entfällt bei Reduced Motion. |
+| Durchsage-Effekt | `src/game/feel/calloutEvents.ts` | „Zug fährt ein“ wird zur Gefahrenwelle (18 m/s). Ab 12 Minuten Verspätung läuft 1,6 s mit Skala 0,45. Hitstop multipliziert weiter mit 0, die Uhren bleiben eine. Unschärfe nur ohne Reduced Motion. |
+| Stempel-Combo | `src/game/feel/stampCombo.ts` | Nur die Folge Slide, Dash, Sprung innerhalb von 650 ms. Namen: Entwerter, Anschlusszug, Zugbindung aufgehoben. Faktor bis 2,5. Treffer leert die Kette. |
+| Kontrolleur | `src/game/feel/conductor.ts` | Ring 1,45 m zahlt 150 Punkte einmal beim Eintritt. Unter 0,55 m ist es ein Treffer, kein Bonus. |
+| Bahnsteig | `src/game/feel/platform.ts` | Rolltreppe schiebt in m/s mit. Gepäck stolpert ab 3,5 m/s. |
+
+Einbau steht in `PLAY_HOOKS`. Tests: `switch`, `calloutEvents`, `stampCombo`, `conductor`, `platform`, `playHooks`.
+
+**Offen:** Ist 3,2 m Spurabstand für die spätere Halle richtig? Soll die Verspätungs-Zeitlupe abbrechbar sein? Reichen 150 Nahtreffer-Punkte? Soll ein voller Stempel stehen bleiben, bis der nächste Treffer kommt, oder nach ein paar Sekunden verfallen? Heute verfällt er nach 650 ms ohne weiteren Stempel.
+
+## Visuelle Einschätzung
+
+**Schwach, bevor es Tokens gab:** Die Skins tragen einzelne Hexwerte, `world.ts` kennt nur Block-Arten, Durchsage und Kamera hatten Zahlen ohne Farbe. Ein Renderer hätte Fliesen, Neon, DB-Rot und HUD-Text jedes Mal neu erfunden. Helle Schrift auf dem Markenrot `#E10600` liegt bei etwa 4,5 knapp unter WCAG AA, taugt also nicht als Textfläche.
+
+**Geändert:** `src/game/look/` mit Nachtpalette, Schriftstapel (Bahnschrift, DIN Alternate, Arial Narrow), Material-Presets für Fliese, Glas, Schiene, Neon, Bank, Kiosk und Lichtvorgaben für Halle, Kiosk, Neon, Zugscheinwerfer. `TEXT_PAIRS` sind die erlaubten Textflächen und werden auf Kontrast geprüft. DB-Rot bleibt der Streifen. Block-Arten aus `world.ts` zeigen auf ein Preset (`BLOCK_MATERIAL`), soweit das ohne Meshes geht.
+
+**Bleibt nach Julians Upload:** echte Three-Materialien und Lichter in view3d, welches Mesh welche Preset-Id bekommt, eine geladene Schrift statt nur dem Stapel, Postprocessing, das DOM des Banners in der Abstecher-Komponente.
+
+## Animationen, zweiter Schritt
+
+Zusätzlich zu Squash, Pose, Shake und Staub:
+
+- `blend.ts`: weicher Übergang zwischen idle, run, jump, slide, dash, land. Kurzes Ausholen, Nachschwung in Metern. Reduced Motion springt auf die Zielpose.
+- `particles.ts`: fester Pool, 48 Slots, kein neues Array pro Frame. Slide-Funken, Dash-Striche, Landestaub. Reduced Motion spawnt nicht. Volle Kappe verwirft den Rest.
+- `framing.ts`: Dash hebt das Sichtfeld von 58° an und die Landung senkt die Kamera um bis zu 0,12 m. Beides zusätzlich zu `stepCamera`. Reduced Motion ohne Kick und ohne Senke.
+
+Einbau in `ANIM_DOCKS` (`loco-blend`, `particles`, `camera-frame`).
+
+## HUD
+
+`src/game/ui/hud.ts`. Punkte und Status an den Ecken, Banner unten über die Breite, Abstand im 8-px-Raster. Unter 760 px Breite wird die Schrift größer. Nach 2,4 s ohne Eingabe gehen die Punkte auf 0,4 Deckkraft, das Banner bleibt bei 1, solange eine Durchsage läuft. Farben kommen aus den Tokens, Kontrast ist getestet. Reduced Motion setzt `fade` auf `snap`.
+
+**Offen:** Soll das HUD bei der Maus auch untätig werden, oder nur ohne Tastatur? Die Funktion kennt nur `idleMs`, die Sim muss entscheiden, was eine Eingabe ist.
+
