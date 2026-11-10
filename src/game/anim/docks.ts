@@ -29,4 +29,19 @@ export const ANIM_DOCKS = [
     reads: "announcementPresentation()",
     writes: "UI-Banner: opacity und translateY. Der Text kommt aus feel/announcements.",
   },
+  {
+    id: "loco-blend",
+    reads: "blendPair(), anticipationAmount(), followThroughOffset()",
+    writes: "view3d: Posengewichte, kurzes Ausholen, Nachschwung. Reduced Motion springt aufs Ziel.",
+  },
+  {
+    id: "particles",
+    reads: "emitParticles() und tickPool()",
+    writes: "draw: Slots des festen Pools. Reduced Motion lässt den Pool leer.",
+  },
+  {
+    id: "camera-frame",
+    reads: "cameraFrame().fov und dip",
+    writes: "view3d: Sichtfeld und Landesenke, zusätzlich zum Shake aus stepCamera. Reduced Motion ohne Kick.",
+  },
 ] as const;
